@@ -27,6 +27,12 @@ struct ProcessingState {
   bool inversion_enabled{false};
   bool histogram_enabled{false};
   bool performance_overlay_enabled{false};
+
+  // My additions
+
+  //grayscale
+  bool grayscale_enabled{false};
+
 };
 
 cv::Mat processFrame(const cv::Mat& frame,
@@ -48,6 +54,14 @@ cv::Mat processFrame(const cv::Mat& frame,
 
   if (config.channel_swap_enabled) {
     processed_frame = photo_booth::swapRedBlueChannels(processed_frame);
+  }
+
+
+  // My additions
+
+  //grayscale
+  if (state.grayscale_enabled) {
+    processed_frame = photo_booth::enableGray(processed_frame);
   }
 
   return processed_frame;
@@ -129,6 +143,11 @@ void printControls() {
             << "  Analysis / display\n"
             << "    h      Toggle histogram display\n"
             << "    p      Toggle performance overlay\n"
+	// My additions
+
+	    //grayscale
+	    << "    g      Toggle grayscale\n"
+
             << "\n"
             << "  Application\n"
             << "    Space  Capture image\n"
@@ -188,6 +207,17 @@ bool handleKey(const int key, ProcessingState& state) {
       std::cout << "Performance overlay: "
                 << (state.performance_overlay_enabled ? "ON" : "OFF") << '\n';
       break;
+
+    // My additions
+
+    //grayscale
+    case 'g':
+    case 'G':
+	state.grayscale_enabled = !state.grayscale_enabled;
+
+	std::cout << "Grayscale: "
+		  << (state.grayscale_enabled ? "ON" : "OFF") << '\n';
+	break;
 
     default:
       break;

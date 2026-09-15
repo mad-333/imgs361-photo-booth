@@ -23,4 +23,11 @@ cv::Mat swapRedBlueChannels(const cv::Mat& image);
  */
 cv::Mat invertImage(const cv::Mat& image);
 
+
+// My additions
+
+//grayscale
+//describe process/function
+cv::Mat enableGray(const cv::Mat& image);
+
 }  // namespace photo_booth

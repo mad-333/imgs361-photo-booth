@@ -58,4 +58,20 @@ cv::Mat invertImage(const cv::Mat& image) {
   return output;
 }
 
+
+// My additions
+
+//grayscale
+cv::Mat enableGray(const cv::Mat& image) {
+  validateImage(image, "enableGray()");  //check if this is necessary for this
+
+  cv::Mat output;
+  cv::Mat oneChannel;
+  
+  cv::cvtColor(image, oneChannel, cv::COLOR_BGR2GRAY);
+  cv::cvtColor(oneChannel, output, cv::COLOR_GRAY2BGR);
+
+  return output;
+}
+
 }  // namespace photo_booth
