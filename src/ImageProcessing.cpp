@@ -78,15 +78,53 @@ cv::Mat enableGray(const cv::Mat& image) {
 cv::Mat uniformQuant(const cv::Mat& image, const int& levels) {
   validateImage(image, "uniformQuant()");
 
-  cv::Mat output = image;
-  output.forEach<cv::Vec3b>([levels](cv::Vec3b& pixel, const int*) {
-    pixel[0] = pixel[0] >> levels;
-    pixel[0] = pixel[0] << levels;
-    pixel[1] = pixel[1] >> levels;
-    pixel[1] = pixel[1] << levels;
-    pixel[2] = pixel[2] >> levels;
-    pixel[2] = pixel[2] << levels;
-  });
+  cv::Mat output = image.clone();
+  for (int r=0; r<output.rows; r++) {
+    for (int c=0; c<output.cols; c++) {
+      cv::Vec3b& pixel = output.at<cv::Vec3b>(r,c);
+      pixel[0] = (pixel[0] >> levels) << levels;
+      pixel[1] = (pixel[1] >> levels) << levels;
+      pixel[2] = (pixel[2] >> levels) << levels;
+    }
+  }
+
+  return output;
+}
+
+//igs
+cv::Mat idealGS(const cv::Mat& image, const int& levels) {
+  validateImage(image, "idealGS()");
+
+  cv::Mat output = image.clone();
+  cv::Vec3b remainder(0, 0, 0);
+  cv::Vec3b remainder_next(0, 0, 0);
+  for (int r=0; r<output.rows; r++) {
+    for (int c=0; c<output.cols; c++) {
+      cv::Vec3b& pixel = output.at<cv::Vec3b>(r,c);
+
+      remainder_next[0] = pixel[0] & ((1 << levels) - 1);
+      remainder_next[1] = pixel[1] & ((1 << levels) - 1);
+      remainder_next[2] = pixel[2] & ((1 << levels) - 1);
+
+      //prevents wrap around
+      for (int num=0; num<3; num++) {
+	int pixel_wrap = pixel[num];
+	int remainder_wrap = remainder[num];
+	if (pixel_wrap + remainder_wrap < 255) {
+	  pixel[num] = pixel[num] + remainder[num];
+	}
+	else {
+	  pixel[num] = 255;
+	}
+      }
+
+      pixel[0] = (pixel[0] >> levels) << levels;
+      pixel[1] = (pixel[1] >> levels) << levels;
+      pixel[2] = (pixel[2] >> levels) << levels;
+
+      remainder = remainder_next;
+    }
+  }
 
   return output;
 }
