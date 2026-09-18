@@ -92,19 +92,15 @@ cv::Mat uniformQuant(const cv::Mat& image, const int& levels) {
 }
 
 //igs
-cv::Mat idealGS(const cv::Mat& image, const int& levels) {
-  validateImage(image, "idealGS()");
+cv::Mat improvedGS(const cv::Mat& image, const int& levels) {
+  validateImage(image, "improvedGS()");
 
   cv::Mat output = image.clone();
-  cv::Vec3b remainder(0, 0, 0);
-  cv::Vec3b remainder_next(0, 0, 0);
   for (int r=0; r<output.rows; r++) {
+    cv::Vec3b remainder(0, 0, 0);
+    cv::Vec3b remainder_next(0, 0, 0);
     for (int c=0; c<output.cols; c++) {
       cv::Vec3b& pixel = output.at<cv::Vec3b>(r,c);
-
-      remainder_next[0] = pixel[0] & ((1 << levels) - 1);
-      remainder_next[1] = pixel[1] & ((1 << levels) - 1);
-      remainder_next[2] = pixel[2] & ((1 << levels) - 1);
 
       //prevents wrap around
       for (int num=0; num<3; num++) {
@@ -117,6 +113,10 @@ cv::Mat idealGS(const cv::Mat& image, const int& levels) {
 	  pixel[num] = 255;
 	}
       }
+
+      remainder_next[0] = pixel[0] & ((1 << levels) - 1);
+      remainder_next[1] = pixel[1] & ((1 << levels) - 1);
+      remainder_next[2] = pixel[2] & ((1 << levels) - 1);
 
       pixel[0] = (pixel[0] >> levels) << levels;
       pixel[1] = (pixel[1] >> levels) << levels;

@@ -34,6 +34,6 @@ cv::Mat enableGray(const cv::Mat& image);
 cv::Mat uniformQuant(const cv::Mat& image, const int& levels);
 
 //igs
-cv::Mat idealGS(const cv::Mat& image, const int& levels);
+cv::Mat improvedGS(const cv::Mat& image, const int& levels);
 
 }  // namespace photo_booth
