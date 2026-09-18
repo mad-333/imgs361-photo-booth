@@ -30,4 +30,7 @@ cv::Mat invertImage(const cv::Mat& image);
 //describe process/function
 cv::Mat enableGray(const cv::Mat& image);
 
+//uniform quantization
+cv::Mat uniformQuant(const cv::Mat& image, const int& levels);
+
 }  // namespace photo_booth

@@ -33,6 +33,10 @@ struct ProcessingState {
   //grayscale
   bool grayscale_enabled{false};
 
+  //uniform quantization
+  bool uniform_quantization{false};
+  int levels{0};
+
 };
 
 cv::Mat processFrame(const cv::Mat& frame,
@@ -62,6 +66,11 @@ cv::Mat processFrame(const cv::Mat& frame,
   //grayscale
   if (state.grayscale_enabled) {
     processed_frame = photo_booth::enableGray(processed_frame);
+  }
+
+  //uniform quantization
+  if (state.uniform_quantization) {
+    processed_frame = photo_booth::uniformQuant(processed_frame, state.levels);
   }
 
   return processed_frame;
@@ -148,6 +157,9 @@ void printControls() {
 	    //grayscale
 	    << "    g      Toggle grayscale\n"
 
+	    //uniform quantization
+	    << "    u      Toggle uniform quantization\n"
+
             << "\n"
             << "  Application\n"
             << "    Space  Capture image\n"
@@ -213,11 +225,34 @@ bool handleKey(const int key, ProcessingState& state) {
     //grayscale
     case 'g':
     case 'G':
-	state.grayscale_enabled = !state.grayscale_enabled;
+      state.grayscale_enabled = !state.grayscale_enabled;
 
-	std::cout << "Grayscale: "
-		  << (state.grayscale_enabled ? "ON" : "OFF") << '\n';
-	break;
+      std::cout << "Grayscale: "
+		<< (state.grayscale_enabled ? "ON" : "OFF") << '\n';
+      break;
+
+    //uniform quantization
+    case 'u':
+    case 'U':
+      if (!state.grayscale_enabled) {         
+        std::cout << "Grayscale must be enabled" << '\n';
+      }
+
+      else {
+        if (state.levels < 7) {
+	  state.levels = state.levels + 1;
+	  state.uniform_quantization = true;
+	  std::cout << "Levels: " << 256 / std::pow(2,state.levels) << '\n';
+	}
+
+	else {
+	  state.levels = 0;
+	  state.uniform_quantization = false;
+	  std::cout << "Levels: 256" << '\n';
+	}
+
+      }
+    break;
 
     default:
       break;

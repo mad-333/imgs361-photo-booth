@@ -63,13 +63,30 @@ cv::Mat invertImage(const cv::Mat& image) {
 
 //grayscale
 cv::Mat enableGray(const cv::Mat& image) {
-  validateImage(image, "enableGray()");  //check if this is necessary for this
+  validateImage(image, "enableGray()");  
 
   cv::Mat output;
   cv::Mat oneChannel;
-  
+
   cv::cvtColor(image, oneChannel, cv::COLOR_BGR2GRAY);
   cv::cvtColor(oneChannel, output, cv::COLOR_GRAY2BGR);
+
+  return output;
+}
+
+//uniform quantization
+cv::Mat uniformQuant(const cv::Mat& image, const int& levels) {
+  validateImage(image, "uniformQuant()");
+
+  cv::Mat output = image;
+  output.forEach<cv::Vec3b>([levels](cv::Vec3b& pixel, const int*) {
+    pixel[0] = pixel[0] >> levels;
+    pixel[0] = pixel[0] << levels;
+    pixel[1] = pixel[1] >> levels;
+    pixel[1] = pixel[1] << levels;
+    pixel[2] = pixel[2] >> levels;
+    pixel[2] = pixel[2] << levels;
+  });
 
   return output;
 }
