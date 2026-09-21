@@ -129,4 +129,99 @@ cv::Mat improvedGS(const cv::Mat& image, const int& levels) {
   return output;
 }
 
+//color switch
+cv::Mat colorSwitch(const cv::Mat& image, const int& levels) {
+  validateImage (image, "colorSwitch()");
+
+  cv::Mat output = image.clone();
+  for (int r=0; r<output.rows; r++) {
+    for(int c=0; c<output.cols; c++) {
+      cv::Vec3b& pixel = output.at<cv::Vec3b>(r,c);
+
+      if (levels == 1) {
+        pixel[1] = 0;
+        pixel[2] = 0;
+      }
+
+      if (levels == 2) {
+        pixel[0] = 0;
+        pixel[2] = 0;
+      }
+
+      if (levels == 3) {
+        pixel[0] = 0;
+        pixel[1] = 0;
+      }
+
+      if (levels == 4) {
+        pixel[2] = 0;
+      }
+
+      if (levels == 5) {
+        pixel[1] = 0;
+      }
+
+      if (levels == 6) {
+        pixel[0] = 0;
+      }
+    }
+  }
+
+  return output;
+}
+
+//histogram equalization
+cv::Mat histEqual(const cv::Mat& image) {
+  validateImage (image, "histEqual()");
+
+  cv::Mat output = image.clone();
+  int total_pixels = output.rows * output.cols;
+  std::vector<cv::Mat> channels;
+  cv::split(image, channels);
+
+  for (int a=0; a<3; a++) {
+    int hist[256] = {0};
+    for (int r=0; r<channels[a].rows; r++) {
+      for (int c=0; c<channels[a].cols; c++) {
+        hist[channels[a].at<uchar>(r, c)]++;
+      }
+    }
+
+    int cdf[256] = {0};
+    cdf[0] = hist[0];
+    int cdf_min = 0;
+    bool min_found = false;
+
+    for (int b=1; b<256; b++) {
+      cdf[b] = cdf[b-1] + hist[b];
+      if(!min_found && cdf[b] > 0) {
+        cdf_min = cdf[b];
+        min_found = true;
+      }
+    }
+
+    uchar lut[256];
+    int denominator = total_pixels - cdf_min;
+    for (int l=0; l<256; l++) {
+      if (denominator <=0) {
+        lut[l] = static_cast<uchar>(l);
+      }
+      else {
+        int value = ((cdf[l] - cdf_min) * 255) / denominator;
+        lut[l] = static_cast<uchar>(std::clamp(value, 0, 255));
+      }
+    }
+
+    cv::Mat& ch = channels[a];
+    for (int r=0; r<ch.rows; r++) {
+      for (int c=0; c<ch.cols; c++) {
+        ch.at<uchar>(r, c) = lut[ch.at<uchar>(r, c)];
+      }
+    }
+  }
+
+  cv::merge(channels, output);
+  return output;
+}
+
 }  // namespace photo_booth

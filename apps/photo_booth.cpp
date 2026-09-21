@@ -40,6 +40,11 @@ struct ProcessingState {
   //igs
   bool igs_enabled{false};
 
+  //color channels
+  bool channel_switch{false};
+
+  //histogram equalization
+  bool hist_equal{false};
 };
 
 cv::Mat processFrame(const cv::Mat& frame,
@@ -79,6 +84,16 @@ cv::Mat processFrame(const cv::Mat& frame,
   //igs
   if (state.igs_enabled) {
     processed_frame = photo_booth::improvedGS(processed_frame, state.levels);
+  }
+
+  //color channels
+  if (state.channel_switch) {
+    processed_frame = photo_booth::colorSwitch(processed_frame, state.levels);
+  }
+
+  //histogram equalization
+  if (state.hist_equal) {
+    processed_frame = photo_booth::histEqual(processed_frame);
   }
 
   return processed_frame;
@@ -171,6 +186,12 @@ void printControls() {
 	    //igs
 	    << "    i      Toggle improved grayscale\n"
 
+            //color channels
+            << "    c      Toggle BGR channels\n"
+
+	    //histogram equalization
+	    << "    e      Toggle histogram equalization\n"
+
             << "\n"
             << "  Application\n"
             << "    Space  Capture image\n"
@@ -245,34 +266,57 @@ bool handleKey(const int key, ProcessingState& state) {
     //uniform quantization
     case 'u':
     case 'U':
-        if (state.levels < 7) {
-	  state.levels = state.levels + 1;
-	  state.uniform_quantization = true;
-	  std::cout << "Levels: " << 256 / std::pow(2,state.levels) << '\n';
-	}
+      if (state.levels < 7) {
+	state.levels = state.levels + 1;
+	state.uniform_quantization = true;
+	std::cout << "Levels: " << 256 / std::pow(2,state.levels) << '\n';
+      }
 
-	else {
-	  state.levels = 0;
-	  state.uniform_quantization = false;
-	  std::cout << "Levels: 256" << '\n';
-	}
+      else {
+	state.levels = 0;
+	state.uniform_quantization = false;
+	std::cout << "Levels: 256" << '\n';
+      }
     break;
 
     //igs
     case 'i':
     case 'I':
-	if (state.levels < 7) {
-	  state.levels = state.levels + 1;
-	  state.igs_enabled = true;
-	  std::cout << "Levels: " << 256 / std::pow(2,state.levels) << '\n';
-	}
+      if (state.levels < 7) {
+	state.levels = state.levels + 1;
+	state.igs_enabled = true;
+	std::cout << "Levels: " << 256 / std::pow(2,state.levels) << '\n';
+      }
 
-	else {
-	  state.levels = 0;
-	  state.igs_enabled = false;
-	  std::cout << "Levels: 256" << '\n';
-	}
+      else {
+	state.levels = 0;
+	state.igs_enabled = false;
+	std::cout << "Levels: 256" << '\n';
+      }
     break;
+
+    //color channels
+    case 'c':
+    case 'C':
+      if (state.levels < 7) {
+        state.levels = state.levels + 1;
+        state.channel_switch = true;
+      }
+
+      else {
+        state.levels = 0;
+        state.channel_switch = false;
+      }
+    break;
+
+    //histogram equalization
+    case 'e':
+    case 'E':
+      state.hist_equal = !state.hist_equal;
+
+      std::cout << "Histogram Equalization: "
+                << (state.hist_equal ? "ON" : "OFF") << '\n';
+      break;
 
     default:
       break;

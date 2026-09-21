@@ -27,7 +27,6 @@ cv::Mat invertImage(const cv::Mat& image);
 // My additions
 
 //grayscale
-//describe process/function
 cv::Mat enableGray(const cv::Mat& image);
 
 //uniform quantization
@@ -36,4 +35,9 @@ cv::Mat uniformQuant(const cv::Mat& image, const int& levels);
 //igs
 cv::Mat improvedGS(const cv::Mat& image, const int& levels);
 
+//color switch
+cv::Mat colorSwitch(const cv::Mat& image, const int& levels);
+
+//histogram equalization
+cv::Mat histEqual(const cv::Mat& image);
 }  // namespace photo_booth
