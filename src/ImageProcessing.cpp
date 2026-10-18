@@ -98,7 +98,6 @@ cv::Mat improved_Grayscale(const cv::Mat& image, const int levels) {
   cv::Mat output = image.clone();
   for (int r=0; r<output.rows; r++) {
     cv::Vec3b remainder(0, 0, 0);
-    cv::Vec3b remainder_next(0, 0, 0);
     for (int c=0; c<output.cols; c++) {
       cv::Vec3b& pixel = output.at<cv::Vec3b>(r,c);
 
@@ -114,15 +113,13 @@ cv::Mat improved_Grayscale(const cv::Mat& image, const int levels) {
 	}
       }
 
-      remainder_next[0] = pixel[0] & ((1 << levels) - 1);
-      remainder_next[1] = pixel[1] & ((1 << levels) - 1);
-      remainder_next[2] = pixel[2] & ((1 << levels) - 1);
+      remainder[0] = pixel[0] & ((1 << levels) - 1);
+      remainder[1] = pixel[1] & ((1 << levels) - 1);
+      remainder[2] = pixel[2] & ((1 << levels) - 1);
 
       pixel[0] = (pixel[0] >> levels) << levels;
       pixel[1] = (pixel[1] >> levels) << levels;
       pixel[2] = (pixel[2] >> levels) << levels;
-
-      remainder = remainder_next;
     }
   }
 
@@ -189,27 +186,15 @@ cv::Mat histogram_Equalization(const cv::Mat& image) {
 
     int cdf[256] = {0};
     cdf[0] = hist[0];
-    int cdf_min = 0;
-    bool min_found = false;
 
     for (int b=1; b<256; b++) {
       cdf[b] = cdf[b-1] + hist[b];
-      if(!min_found && cdf[b] > 0) {
-        cdf_min = cdf[b];
-        min_found = true;
-      }
     }
 
     uchar lut[256];
-    int denominator = total_pixels - cdf_min;
     for (int l=0; l<256; l++) {
-      if (denominator <=0) {
-        lut[l] = static_cast<uchar>(l);
-      }
-      else {
-        int value = ((cdf[l] - cdf_min) * 255) / denominator;
-        lut[l] = static_cast<uchar>(std::clamp(value, 0, 255));
-      }
+      int value = (cdf[l] * 255) / total_pixels;
+      lut[l] = static_cast<uchar>(std::clamp(value, 0, 255));
     }
 
     cv::Mat& ch = channels[a];
