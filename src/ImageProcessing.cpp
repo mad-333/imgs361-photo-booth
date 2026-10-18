@@ -62,8 +62,8 @@ cv::Mat invertImage(const cv::Mat& image) {
 // My additions
 
 //grayscale
-cv::Mat enableGray(const cv::Mat& image) {
-  validateImage(image, "enableGray()");  
+cv::Mat Grayscale(const cv::Mat& image) {
+  validateImage(image, "Grayscale()");  
 
   cv::Mat output;
   cv::Mat oneChannel;
@@ -75,8 +75,8 @@ cv::Mat enableGray(const cv::Mat& image) {
 }
 
 //uniform quantization
-cv::Mat uniformQuant(const cv::Mat& image, const int& levels) {
-  validateImage(image, "uniformQuant()");
+cv::Mat uniform_Quantization(const cv::Mat& image, const int levels) {
+  validateImage(image, "uniform_Quantization()");
 
   cv::Mat output = image.clone();
   for (int r=0; r<output.rows; r++) {
@@ -92,8 +92,8 @@ cv::Mat uniformQuant(const cv::Mat& image, const int& levels) {
 }
 
 //igs
-cv::Mat improvedGS(const cv::Mat& image, const int& levels) {
-  validateImage(image, "improvedGS()");
+cv::Mat improved_Grayscale(const cv::Mat& image, const int levels) {
+  validateImage(image, "improved_Grayscale()");
 
   cv::Mat output = image.clone();
   for (int r=0; r<output.rows; r++) {
@@ -130,7 +130,7 @@ cv::Mat improvedGS(const cv::Mat& image, const int& levels) {
 }
 
 //color switch
-cv::Mat colorSwitch(const cv::Mat& image, const int& levels) {
+cv::Mat colorSwitch(const cv::Mat& image, const int levels) {
   validateImage (image, "colorSwitch()");
 
   cv::Mat output = image.clone();
@@ -171,8 +171,8 @@ cv::Mat colorSwitch(const cv::Mat& image, const int& levels) {
 }
 
 //histogram equalization
-cv::Mat histEqual(const cv::Mat& image) {
-  validateImage (image, "histEqual()");
+cv::Mat histogram_Equalization(const cv::Mat& image) {
+  validateImage (image, "histogram_Equalization()");
 
   cv::Mat output = image.clone();
   int total_pixels = output.rows * output.cols;

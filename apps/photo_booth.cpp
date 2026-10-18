@@ -42,6 +42,7 @@ struct ProcessingState {
 
   //color channels
   bool channel_switch{false};
+  int times_pressed{0};
 
   //histogram equalization
   bool hist_equal{false};
@@ -73,27 +74,27 @@ cv::Mat processFrame(const cv::Mat& frame,
 
   //grayscale
   if (state.grayscale_enabled) {
-    processed_frame = photo_booth::enableGray(processed_frame);
+    processed_frame = photo_booth::Grayscale(processed_frame);
   }
 
   //uniform quantization
   if (state.uniform_quantization) {
-    processed_frame = photo_booth::uniformQuant(processed_frame, state.levels);
+    processed_frame = photo_booth::uniform_Quantization(processed_frame, state.levels);
   }
 
   //igs
   if (state.igs_enabled) {
-    processed_frame = photo_booth::improvedGS(processed_frame, state.levels);
+    processed_frame = photo_booth::improved_Grayscale(processed_frame, state.levels);
   }
 
   //color channels
   if (state.channel_switch) {
-    processed_frame = photo_booth::colorSwitch(processed_frame, state.levels);
+    processed_frame = photo_booth::colorSwitch(processed_frame, state.times_pressed);
   }
 
   //histogram equalization
   if (state.hist_equal) {
-    processed_frame = photo_booth::histEqual(processed_frame);
+    processed_frame = photo_booth::histogram_Equalization(processed_frame);
   }
 
   return processed_frame;
@@ -298,13 +299,13 @@ bool handleKey(const int key, ProcessingState& state) {
     //color channels
     case 'c':
     case 'C':
-      if (state.levels < 7) {
-        state.levels = state.levels + 1;
+      if (state.times_pressed < 7) {
+        state.times_pressed = state.times_pressed + 1;
         state.channel_switch = true;
       }
 
       else {
-        state.levels = 0;
+        state.times_pressed = 0;
         state.channel_switch = false;
       }
     break;

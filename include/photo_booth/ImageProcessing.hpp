@@ -27,17 +27,17 @@ cv::Mat invertImage(const cv::Mat& image);
 // My additions
 
 //grayscale
-cv::Mat enableGray(const cv::Mat& image);
+cv::Mat Grayscale(const cv::Mat& image);
 
 //uniform quantization
-cv::Mat uniformQuant(const cv::Mat& image, const int& levels);
+cv::Mat uniform_Quantization(const cv::Mat& image, const int levels);
 
 //igs
-cv::Mat improvedGS(const cv::Mat& image, const int& levels);
+cv::Mat improved_Grayscale(const cv::Mat& image, const int levels);
 
 //color switch
-cv::Mat colorSwitch(const cv::Mat& image, const int& levels);
+cv::Mat colorSwitch(const cv::Mat& image, const int levels);
 
 //histogram equalization
-cv::Mat histEqual(const cv::Mat& image);
+cv::Mat histogram_Equalization(const cv::Mat& image);
 }  // namespace photo_booth
