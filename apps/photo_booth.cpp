@@ -46,6 +46,29 @@ struct ProcessingState {
 
   //histogram equalization
   bool hist_equal{false};
+
+  //frequency domain filtering
+  int filter;
+  double cutoff;
+  int order{0};
+  bool freq_filter{false};
+
+  //affine transform
+  bool affine_transform{false};
+  double angle;
+  double scaleX;
+  double scaleY;
+  double translateX;
+  double translateY;
+
+  //spatial filtering
+  bool spatial_filter{false};
+  cv::Mat filterKernel= cv::Mat::zeros(3, 3, CV_64F);
+  int filter_mode{0};
+
+  //log polar
+  bool log_polar{false};
+
 };
 
 cv::Mat processFrame(const cv::Mat& frame,
@@ -95,6 +118,26 @@ cv::Mat processFrame(const cv::Mat& frame,
   //histogram equalization
   if (state.hist_equal) {
     processed_frame = photo_booth::histogram_Equalization(processed_frame);
+  }
+
+  //frequency domain filtering
+  if (state.freq_filter) {
+    processed_frame = photo_booth::generateFilterMask(processed_frame, state.filter, state.cutoff, state.order);
+  }
+
+  //affine transform
+  if (state.affine_transform) {
+    processed_frame = photo_booth::affineTransform(processed_frame, state.angle, state.scaleX, state.scaleY, state.translateX, state.translateY);
+  }
+
+  //spatial filtering
+  if (state.spatial_filter) {
+    processed_frame = photo_booth::spatialFilter(processed_frame, state.filterKernel);
+  }
+
+  //log polar
+  if (state.log_polar) {
+    processed_frame = photo_booth::logPolarTransform(processed_frame);
   }
 
   return processed_frame;
@@ -192,6 +235,19 @@ void printControls() {
 
 	    //histogram equalization
 	    << "    e      Toggle histogram equalization\n"
+
+	    //frequency domain filtering
+	    << "    f      Toggle frequency domain filtering\n"
+
+	    //afine transform
+	    << "    a      Toggle affine transform\n"
+
+	    //spatial filtering
+	    << "    s      Spatial filtering presets\n"
+	    << "    m      Manual spatial filtering\n"
+
+	    //log polar
+	    << "    l      Toggle log polar transform\n"
 
             << "\n"
             << "  Application\n"
@@ -319,8 +375,119 @@ bool handleKey(const int key, ProcessingState& state) {
                 << (state.hist_equal ? "ON" : "OFF") << '\n';
       break;
 
-    default:
+    //frequency domain filtering
+    case 'f':
+    case 'F':
+      if (state.freq_filter) {
+        state.freq_filter = !state.freq_filter;
+      }
+      else {
+        std::cout << "Filter type(1:lowpass, 2:highpass, 3:butterworth, 4:gaussian): ";
+        std::cin >> state.filter;
+
+        std::cout << "Cutoff: ";
+        std::cin >> state.cutoff;
+
+        if (state.filter == 4) {
+          std::cout << "Order: ";
+          std::cin >> state.order;
+        }
+        state.freq_filter = !state.freq_filter;
+      }
       break;
+
+    //affine transform
+    case 'a':
+    case 'A':
+      if (!state.affine_transform) {
+        std::cout << "Rotation angle: ";
+        std::cin >> state.angle;
+
+        std::cout << "Scale (x y): ";
+        std::cin >> state.scaleX >> state.scaleY;
+
+        std::cout << "Translation (x y): ";
+        std::cin >> state.translateX >> state.translateY;
+      }
+      state.affine_transform = !state.affine_transform;
+      break;
+
+    //spatial filter
+    case 's':
+    case 'S':
+      if (state.filter_mode == 5) {
+        state.spatial_filter = false;
+        state.filter_mode = 0;
+      }
+      else if (state.filter_mode == 0) {
+        state.spatial_filter = true;
+        state.filterKernel = (cv::Mat_<double>(3, 3) << 
+	  0.1, 0.1, 0.1, 
+	  0.1, 0.1, 0.1,
+	  0.1, 0.1, 0.1);
+        std::cout << "Filter preset: Box Blur\n"; 
+        state.filter_mode++;
+      }
+      else if (state.filter_mode == 1) {
+        state.filterKernel = (cv::Mat_<double>(3, 3) << 
+	  0.1, 0.2, 0.1,
+	  0.2, 0.5, 0.2,
+	  0.1, 0.2, 0.1);
+        std::cout << "Filter preset: Gaussian Blur\n";
+        state.filter_mode++;
+      }
+      else if (state.filter_mode == 2) {
+        state.filterKernel = (cv::Mat_<double>(3, 3) << 
+	  0.0, -1.0, 0.0,
+	  -1.0, 5.0, -1.0,
+	  0.0, -1.0, 0.0);
+        std::cout << "Filter preset: Sharpen\n";
+        state.filter_mode++;
+      }
+      else if (state.filter_mode == 3) {
+        state.filterKernel = (cv::Mat_<double>(3, 3) << 
+	  -1.0, 0.0, 1.0, 
+	  -2.0, 0.0, 2.0,
+	  -1.0, 0.0, 1.0);
+        std::cout << "Filter Preset: Horizontal Edge Detection\n";
+        state.filter_mode++;
+      }
+      else if (state.filter_mode == 4) {
+        state.filterKernel = (cv::Mat_<double>(3, 3) << 
+	  -1.0, -2.0, -1.0,
+	  0.0, 0.0, 0.0,
+	  1.0, 2.0, 1.0);
+        std::cout << "Filter preset: Vertical Edge Detection\n";
+        state.filter_mode++;
+      }
+      break;
+
+    case 'm':
+    case 'M':
+      if (!state.spatial_filter) {
+        std::cout << "Row 1 (1 2 3): ";
+        std::cin >> state.filterKernel.at<double>(0, 0) >> state.filterKernel.at<double>(0, 1) >> state.filterKernel.at<double>(0, 2);
+        std::cout << "Row 2 (1 2 3): ";
+        std::cin >> state.filterKernel.at<double>(1, 0) >> state.filterKernel.at<double>(1, 1) >> state.filterKernel.at<double>(1, 2);
+        std::cout << "Row 3 (1 2 3): ";
+        std::cin >> state.filterKernel.at<double>(2, 0) >> state.filterKernel.at<double>(2, 1) >> state.filterKernel.at<double>(2, 2);
+      }
+      state.spatial_filter = !state.spatial_filter;
+      break;
+
+    //log polar
+    case 'l':
+    case 'L':
+      state.log_polar = !state.log_polar;
+
+      std::cout << "Log Polar Transform: "
+		<< (state.log_polar ? "ON" : "OFF") << '\n';
+
+      break;
+
+    default:
+    break;
+
   }
 
   return true;

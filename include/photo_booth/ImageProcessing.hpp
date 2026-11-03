@@ -40,4 +40,20 @@ cv::Mat colorSwitch(const cv::Mat& image, const int levels);
 
 //histogram equalization
 cv::Mat histogram_Equalization(const cv::Mat& image);
+
+//frequency domain filtering
+cv::Mat generateFilterMask(const cv::Mat& image, const int type, const double cutoff, const int order);
+
+//spatial filtering
+cv::Mat spatialFilter(const cv::Mat& image, const cv::Mat& filterKernel);
+
+//affine transform
+cv::Mat affineTransform(const cv::Mat& image, const double angle, const double scaleX, const double scaleY, const double translateX, const double translateY);
+
+//log polar
+cv::Mat logPolarTransform(const cv::Mat& image);
+
+//perspective transform
+
+
 }  // namespace photo_booth
