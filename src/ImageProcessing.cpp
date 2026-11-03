@@ -314,7 +314,7 @@ cv::Mat spatialFilter(const cv::Mat& image, const cv::Mat& filterKernel) {
 	  int neighborX = std::clamp(x+a, 0, rows-1);
 	  int neighborY = std::clamp(y+b, 0, cols-1);
 
-	  cv::Vec3b pixel = output.at<cv::Vec3b>(neighborX, neighborY);
+	  cv::Vec3b pixel = image.at<cv::Vec3b>(neighborX, neighborY);
 	  double filter = filterKernel.at<double>(a+1, b+1);
 
 	  sumBlue += pixel[0]*filter;
@@ -338,12 +338,14 @@ cv::Mat affineTransform(const cv::Mat& image, const double angle, const double s
   double cos = std::cos(radian);
   double sin = std::sin(radian);
 
-  cv::Mat matrix = (cv::Mat_<double>(3, 3) <<
+  cv::Mat matrix = (cv::Mat_<double>(2, 3) <<
     scaleX*cos, -scaleY*sin, translateX,
-    scaleX*sin, scaleY*cos, translateY,
-    0.0, 0.0, 1.0);
+    scaleX*sin, scaleY*cos, translateY
+    );
 
-  return photo_booth::spatialFilter(image, matrix);
+  cv::Mat output = image.clone();
+  cv::warpAffine(image, output, matrix, image.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, cv::Scalar());
+  return output;
 }
 
 //log polar
