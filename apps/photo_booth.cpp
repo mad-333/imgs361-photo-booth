@@ -48,10 +48,10 @@ struct ProcessingState {
   bool hist_equal{false};
 
   //frequency domain filtering
-  int filter;
   double cutoff;
   int order{0};
-  bool freq_filter{false};
+  int filter{0};
+  bool frequency_filter{false};
 
   //affine transform
   bool affine_transform{false};
@@ -121,7 +121,7 @@ cv::Mat processFrame(const cv::Mat& frame,
   }
 
   //frequency domain filtering
-  if (state.freq_filter) {
+  if (state.frequency_filter) {
     processed_frame = photo_booth::generateFilterMask(processed_frame, state.filter, state.cutoff, state.order);
   }
 
@@ -378,21 +378,49 @@ bool handleKey(const int key, ProcessingState& state) {
     //frequency domain filtering
     case 'f':
     case 'F':
-      if (state.freq_filter) {
-        state.freq_filter = !state.freq_filter;
-      }
-      else {
-        std::cout << "Filter type(1:lowpass, 2:highpass, 3:butterworth, 4:gaussian): ";
-        std::cin >> state.filter;
+      if (state.filter < 7) {
+        state.filter = state.filter + 1;
+       
+	if (state.filter == 1) { 
+          std::cout << "Cutoff: ";
+          std::cin >> state.cutoff;
+	}
 
-        std::cout << "Cutoff: ";
-        std::cin >> state.cutoff;
-
-        if (state.filter == 4) {
+        if (state.filter == 5) {
           std::cout << "Order: ";
           std::cin >> state.order;
         }
-        state.freq_filter = !state.freq_filter;
+
+        state.frequency_filter = true;
+ 
+        if (state.filter == 1) {
+	  std::cout << "Filter type: Ideal Lowpass\n";
+	}
+
+	if (state.filter == 2) {
+	  std::cout << "Filter type: Ideal Highpass\n";
+	}
+
+	if (state.filter == 3) {
+	  std::cout << "Filter type: Guassian Lowpass\n";
+	}
+
+	if (state.filter == 4) {
+	  std::cout << "Filter type: Guassian Highpass\n";
+	}
+
+	if (state.filter == 5) {
+	  std::cout << "Filter type: Butterworth Lowpass\n";
+	}
+
+	if (state.filter == 6) {
+	  std::cout << "Filter type: Butterworth Highpass\n";
+	}
+
+      }
+      else {
+        state.filter = 0;
+        state.frequency_filter = false;
       }
       break;
 
@@ -422,17 +450,17 @@ bool handleKey(const int key, ProcessingState& state) {
       else if (state.filter_mode == 0) {
         state.spatial_filter = true;
         state.filterKernel = (cv::Mat_<double>(3, 3) << 
-	  0.1, 0.1, 0.1, 
-	  0.1, 0.1, 0.1,
-	  0.1, 0.1, 0.1);
+	  0.1111, 0.1111, 0.1111, 
+	  0.1111, 0.1111, 0.1111,
+	  0.1111, 0.1111, 0.1111);
         std::cout << "Filter preset: Box Blur\n"; 
         state.filter_mode++;
       }
       else if (state.filter_mode == 1) {
         state.filterKernel = (cv::Mat_<double>(3, 3) << 
-	  0.1, 0.2, 0.1,
-	  0.2, 0.5, 0.2,
-	  0.1, 0.2, 0.1);
+	  0.0625, 0.125, 0.0625,
+	  0.125, 0.25, 0.125,
+	  0.0625, 0.125, 0.0625);
         std::cout << "Filter preset: Gaussian Blur\n";
         state.filter_mode++;
       }

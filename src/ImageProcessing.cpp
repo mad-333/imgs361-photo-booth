@@ -253,11 +253,19 @@ cv::Mat generateFilterMask(const cv::Mat& image, const int type, const double cu
       }
 
       else if (type == 3) {
-	value = 1.0/(1.0+std::pow(dist/cutoff, 2*order));
+	value = std::exp(-std::pow(dist, 2)/(2.0*std::pow(cutoff, 2)));
       }
 
       else if (type == 4) {
-	value = std::exp(-std::pow(dist, 2)/(2.0*std::pow(cutoff, 2)));
+	value = 1.0 - std::exp(-std::pow(dist, 2)/(2.0*std::pow(cutoff, 2)));
+      }
+
+      else if (type == 5) {
+	value = 1.0/(1.0+std::pow(dist/cutoff, 2*order));
+      }
+
+      else if (type == 6) {
+	value = 1.0/(1.0+std::pow(cutoff/dist, 2*order));
       }
 
       filter.at<cv::Vec2f>(a, b) = cv::Vec2f(static_cast<float>(value), static_cast<float>(value));
