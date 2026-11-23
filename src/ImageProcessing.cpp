@@ -524,8 +524,95 @@ cv::Mat harrisCorner(const cv::Mat& image, const double threshRatio) {
 }
 
 // fast corner
+cv::Mat FASTCorner(const cv::Mat& image, const int threshold) { 
+  cv::Mat gray;
+  cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY); 
+  int rows = gray.rows; 
+  int cols = gray.cols; 
 
+  const int circle[16][2] = { 
+	{0, -3}, {1, -3}, {2, -2}, {3, -1}, 
+	{3,  0}, {3,  1}, {2,  2}, {1,  3}, 
+	{0,  3}, {-1, 3}, {-2, 2}, {-3, 1}, 
+	{-3, 0}, {-3,-1}, {-2,-2}, {-1,-3} 
+  }; 
 
+  cv::Mat scoreMap = cv::Mat::zeros(rows, cols, CV_32S); 
 
+  for (int x = 3; x < rows - 3; x++) { 
+    for (int y = 3; y < cols - 3; y++) { 
+      int center_intense = gray.at<uchar>(x, y); 
+      int upper = center_intense + threshold; 
+      int lower = center_intense - threshold; 
+ 
+      int p1 = gray.at<uchar>(x + circle[0][1],  y + circle[0][0]); 
+      int p5 = gray.at<uchar>(x + circle[4][1],  y + circle[4][0]); 
+      int p9 = gray.at<uchar>(x + circle[8][1],  y + circle[8][0]); 
+      int p13 = gray.at<uchar>(x + circle[12][1], y + circle[12][0]); 
+
+      int brightCount = (p1 > upper) + (p5 > upper) + (p9 > upper) + (p13 > upper); 
+      int darkCount = (p1 < lower) + (p5 < lower) + (p9 < lower) + (p13 < lower); 
+ 
+      if (brightCount < 3 && darkCount < 3) continue; 
+ 
+      int states[32]; 
+      int cornerScore = 0; 
+      for (int i = 0; i < 16; i++) {
+        int val = gray.at<uchar>(x + circle[i][1], y + circle[i][0]); 
+        if (val > upper) { 
+    	  states[i] = states[i + 16] = 1;  // Brighter 
+    	  cornerScore += (val - upper); 
+  	} 
+  	else if (val < lower) { 
+    	  states[i] = states[i + 16] = -1; // Darker 
+    	  cornerScore += (lower - val); 
+  	} 
+  	else { 
+    	  states[i] = states[i + 16] = 0;  // Similar 
+  	} 
+      } 
+
+      int maxRun = 0, currentRun = 0, prevState = 0; 
+      for (int i = 0; i < 32; i++) { 
+  	if (states[i] != 0 && states[i] == prevState) { 
+    	  currentRun++; 
+    	  if (currentRun > maxRun) maxRun = currentRun; 
+  	} 
+  	else { 
+    	  currentRun = (states[i] != 0) ? 1 : 0; 
+    	  prevState = states[i]; 
+        } 
+      } 
+      if (maxRun >= 9) { 
+  	scoreMap.at<int>(x, y) = cornerScore; 
+      } 
+    } 
+  } 
+   
+  std::vector<cv::Point> corners; 
+  for (int x = 3; x < rows - 3; x++) { 
+    for (int y = 3; y < cols - 3; y++) { 
+      int score = scoreMap.at<int>(x, y); 
+      if (score == 0) continue; 
+      bool isMax = true; 
+      for (int a = -1; a <= 1 && isMax; a++) { 
+  	for (int b = -1; b <= 1; b++) { 
+    	  if (a == 0 && b == 0) continue; 
+    	  if (scoreMap.at<int>(x + a, y + b) >= score) { 
+	    isMax = false; 
+	    break; 
+    	  } 
+  	} 
+      } 
+      if (isMax) corners.emplace_back(y, x); 
+    } 
+  } 
+  cv::Mat output = image.clone();
+ 
+  for (const auto& pt : corners) { 
+    cv::circle(output, pt, 5, cv::Scalar(0, 255, 0), cv::FILLED); 
+  }
+  return output;
+}
 
 }  // namespace photo_booth

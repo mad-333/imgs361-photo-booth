@@ -59,4 +59,7 @@ cv::Mat perspectiveTransform(const cv::Mat& image, const cv::Mat& coordinates);
 //harris corner
 cv::Mat harrisCorner(const cv::Mat& image, const double threshRatio);
 
+//fast corner
+cv::Mat FASTCorner(const cv::Mat& image, const int threshold);
+
 }  // namespace photo_booth

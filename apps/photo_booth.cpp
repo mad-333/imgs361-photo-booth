@@ -74,6 +74,10 @@ struct ProcessingState {
   double threshold{0.0};
   bool harris_corner{false};
 
+  //fast corner
+  int threshFAST{0};
+  bool fast_corner{false};
+
 };
 
 cv::Mat processFrame(const cv::Mat& frame,
@@ -148,6 +152,11 @@ cv::Mat processFrame(const cv::Mat& frame,
   //harris corner
   if (state.harris_corner) {
     processed_frame = photo_booth::harrisCorner(processed_frame, state.threshold);
+  }
+
+  //fast corner
+  if (state.fast_corner) {
+    processed_frame = photo_booth::FASTCorner(processed_frame, state.threshFAST);
   }
 
   return processed_frame;
@@ -261,6 +270,9 @@ void printControls() {
 
 	    //harris corner
 	    << "    b      Toggle harris corner detection\n"
+
+	    //fast corner
+	    << "    d	   Toggle FAST corner detection\n"
 
             << "\n"
             << "  Application\n"
@@ -562,6 +574,45 @@ bool handleKey(const int key, ProcessingState& state) {
 	state.corner_count++;
         state.threshold = 0.05;
         std::cout << "Corner Threshold: 5%\n";
+      }
+      break;
+
+    //fast corner
+    case 'd':
+    case 'D':
+      if (state.corner_count == 5) {
+        state.fast_corner = false;
+        state.corner_count = 0;
+        std::cout << "FAST Corner Detection: "
+                  << (state.fast_corner ? "ON" : "OFF") << '\n';
+      }
+      else if (state.corner_count == 0) {
+        state.fast_corner = true;
+        state.corner_count++;
+        state.threshFAST = 10;
+        std::cout << "FAST Corner Detection: "
+                  << (state.fast_corner ? "ON" : "OFF") << '\n';
+        std::cout << "Corner Threshold: 10\n";
+      }
+      else if (state.corner_count == 1) {
+        state.corner_count++;
+        state.threshFAST = 20;
+        std::cout << "Corner Threshold: 20\n";
+      }
+      else if (state.corner_count == 2) {
+        state.corner_count++;
+        state.threshFAST = 30;
+        std::cout << "Corner Threshold: 30\n";
+      }
+      else if (state.corner_count == 3) {
+        state.corner_count++;
+        state.threshFAST = 40;
+        std::cout << "Corner Threshold: 40\n";
+      }
+      else if (state.corner_count == 4) {
+        state.corner_count++;
+        state.threshFAST = 50;
+        std::cout << "Corner Threshold: 50\n";
       }
       break;
 
