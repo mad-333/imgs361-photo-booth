@@ -54,6 +54,9 @@ cv::Mat affineTransform(const cv::Mat& image, const double angle, const double s
 cv::Mat logPolarTransform(const cv::Mat& image);
 
 //perspective transform
+cv::Mat perspectiveTransform(const cv::Mat& image, const cv::Mat& coordinates);
 
+//harris corner
+cv::Mat harrisCorner(const cv::Mat& image, const double threshRatio);
 
 }  // namespace photo_booth

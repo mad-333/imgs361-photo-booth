@@ -390,6 +390,141 @@ cv::Mat logPolarTransform(const cv::Mat& image) {
 }
 
 //perspective transform
+cv::Mat perspectiveTransform(const cv::Mat& image, const cv::Mat& coordinates) {
+  std::vector<cv::Point2f> points(4);
+  for (int i = 0; i <4 ; i++) {
+    points[i] = cv::Point2f(coordinates.at<int>(0, i), coordinates.at<int>(1, i));
+  }
+
+  std::vector<cv::Point2f> orderedPts(4);
+
+  std::sort(points.begin(), points.end(), [](const cv::Point& a, const cv::Point& b) {
+    return a.x < b.x;
+  });
+
+  if (points[0].y < points[1].y) {
+    orderedPts[0] = points[0];
+    orderedPts[3] = points[1];
+  }
+  else {
+    orderedPts[0] = points[1];
+    orderedPts[3] = points[0];
+  }
+
+  if (points[2].y < points[3].y) {
+    orderedPts[1] = points[2];
+    orderedPts[2] = points[3];
+  }
+  else {
+    orderedPts[1] = points[3];
+    orderedPts[2] = points[2];
+  }
+
+  int widthA = static_cast<int>(cv::norm(orderedPts[2] - orderedPts[3]));
+  int widthB = static_cast<int>(cv::norm(orderedPts[1] - orderedPts[0]));
+  int maxWidth = std::max(widthA, widthB);
+
+  int heightA = static_cast<int>(cv::norm(orderedPts[1] - orderedPts[2]));
+  int heightB = static_cast<int>(cv::norm(orderedPts[0] - orderedPts[3]));
+  int maxHeight = std::max(heightA, heightB);
+
+  std::vector<cv::Point2f> endCoords = {
+    cv::Point(0, 0),
+    cv::Point(maxWidth - 1, 0),
+    cv::Point(maxWidth - 1, maxHeight - 1), 
+    cv::Point(0, maxHeight - 1)
+  };
+
+  cv::Mat perspective = cv::getPerspectiveTransform(orderedPts, endCoords);
+  cv::Mat output = image.clone();
+  cv::warpPerspective(image, output, perspective, cv::Size(maxWidth, maxHeight));
+
+  return output;
+}
+
+// harris corner
+cv::Mat harrisCorner(const cv::Mat& image, const double threshRatio) { 
+  cv::Mat gray;
+  cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+  int rows = gray.rows; 
+  int cols = gray.cols; 
+
+  cv::Mat gradientX = cv::Mat::zeros(rows, cols, CV_64F); 
+  cv::Mat gradientY = cv::Mat::zeros(rows, cols, CV_64F); 
+  for (int r = 1; r < rows - 1; ++r) { 
+    for(int c = 1; c < cols - 1; ++c) { 
+      double valueX = -gray.at<uchar>(r-1, c-1) + gray.at<uchar>(r-1, c+1) 
+      -2*gray.at<uchar>(r, c-1) + 2*gray.at<uchar>(r, c+1) 
+      -gray.at<uchar>(r+1, c-1) + gray.at<uchar>(r+1, c+1); 
+
+      double valueY = -gray.at<uchar>(r-1, c-1) - 2*gray.at<uchar>(r-1, c) 
+      -gray.at<uchar>(r-1, c+1) +gray.at<uchar>(r+1, c-1) 
+      +2*gray.at<uchar>(r+1, c) + gray.at<uchar>(r+1, c+1); 
+
+      gradientX.at<double>(r, c) = valueX; 
+      gradientY.at<double>(r, c) = valueY; 
+    } 
+  } 
+ 
+  cv::Mat gradientXX = gradientX.mul(gradientX); 
+  cv::Mat gradientYY = gradientY.mul(gradientY); 
+  cv::Mat gradientXY = gradientX.mul(gradientY); 
+ 
+  cv::Mat response_values = cv::Mat::zeros(rows, cols, CV_64F); 
+  double maxResponse = 0.0; 
+
+  for (int x = 2; x < rows - 2; x++) { 
+    for (int y = 2; y < cols - 2; y++) { 
+      double Sumxx = 0.0, Sumyy = 0.0, Sumxy = 0.0; 
+ 
+      for (int a = -1; a <= 1; a++) { 
+        for (int b = -1; b <= 1; b++) { 
+          Sumxx += gradientXX.at<double>(x + a, y + b); 
+          Sumyy += gradientYY.at<double>(x + a, y + b); 
+          Sumxy += gradientXY.at<double>(x + a, y + b); 
+        } 
+      } 
+ 
+      double det = (Sumxx * Sumyy) - (Sumxy * Sumxy);
+      double trace = Sumxx + Sumyy; 
+      double response = det - 0.04 * (trace * trace); 
+
+      response_values.at<double>(x, y) = response; 
+      if (response > maxResponse) maxResponse = response; 
+    } 
+  } 
+ 
+  std::vector<cv::Point> corners; 
+  double threshold = threshRatio* maxResponse; 
+
+  for (int x = 2; x < rows - 2; x++) { 
+    for (int y = 2; y < cols - 2; y++) { 
+     double val = response_values.at<double>(x, y); 
+     if (val > threshold) {  
+        bool isMax = true; 
+        for (int a = -1; a <= 1 && isMax; a++) { 
+          for (int b = -1; b <= 1; b++) {
+             if (a == 0 && b == 0) continue; 
+	     if (response_values.at<double>(x + a, y + b) >= val) { 
+  	       isMax = false; 
+  	       break; 
+	     } 
+    	  } 
+  	} 
+  	if (isMax) corners.emplace_back(y, x); 
+      } 
+    } 
+  } 
+  cv::Mat output = image.clone();
+ 
+  for (const auto& pt : corners) { 
+    cv::circle(output, pt, 5, cv::Scalar(0, 255, 0), cv::FILLED); 
+  }
+  return output;
+}
+
+// fast corner
+
 
 
 

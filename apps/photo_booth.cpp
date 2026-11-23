@@ -69,6 +69,11 @@ struct ProcessingState {
   //log polar
   bool log_polar{false};
 
+  //harris corner
+  int corner_count{0};
+  double threshold{0.0};
+  bool harris_corner{false};
+
 };
 
 cv::Mat processFrame(const cv::Mat& frame,
@@ -138,6 +143,11 @@ cv::Mat processFrame(const cv::Mat& frame,
   //log polar
   if (state.log_polar) {
     processed_frame = photo_booth::logPolarTransform(processed_frame);
+  }
+
+  //harris corner
+  if (state.harris_corner) {
+    processed_frame = photo_booth::harrisCorner(processed_frame, state.threshold);
   }
 
   return processed_frame;
@@ -248,6 +258,9 @@ void printControls() {
 
 	    //log polar
 	    << "    l      Toggle log polar transform\n"
+
+	    //harris corner
+	    << "    b      Toggle harris corner detection\n"
 
             << "\n"
             << "  Application\n"
@@ -511,6 +524,45 @@ bool handleKey(const int key, ProcessingState& state) {
       std::cout << "Log Polar Transform: "
 		<< (state.log_polar ? "ON" : "OFF") << '\n';
 
+      break;
+
+    //harris corner
+    case 'b':
+    case 'B':
+      if (state.corner_count == 5) {
+        state.harris_corner = false;
+        state.corner_count = 0;
+        std::cout << "Harris Corner Detection: "
+	          << (state.harris_corner ? "ON" : "OFF") << '\n';
+      }
+      else if (state.corner_count == 0) {
+	state.harris_corner = true;
+	state.corner_count++;
+	state.threshold = 0.01;
+	std::cout << "Harris Corner Detection: "
+                  << (state.harris_corner ? "ON" : "OFF") << '\n';
+	std::cout << "Corner Threshold: 1%\n";
+      }
+      else if (state.corner_count == 1) {
+	state.corner_count++;
+        state.threshold = 0.02;
+        std::cout << "Corner Threshold: 2%\n";
+      }
+      else if (state.corner_count == 2) {
+	state.corner_count++;
+        state.threshold = 0.03;
+        std::cout << "Corner Threshold: 3%\n";
+      }
+      else if (state.corner_count == 3) {
+	state.corner_count++;
+        state.threshold = 0.04;
+        std::cout << "Corner Threshold: 4%\n";
+      }
+      else if (state.corner_count == 4) {
+	state.corner_count++;
+        state.threshold = 0.05;
+        std::cout << "Corner Threshold: 5%\n";
+      }
       break;
 
     default:
